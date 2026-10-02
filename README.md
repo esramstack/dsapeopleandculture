@@ -9,13 +9,13 @@ A single static page. No build step, no backend.
 ## Deploy with GitHub and Vercel
 1. Create a **private** GitHub repository and upload both files to its root.
 2. In Vercel, choose **Add New > Project**, import the repository, set Framework Preset to **Other**, and deploy. No build command is needed.
-3. Name the project `dsa-people-culture` so the address is `https://dsa-people-culture.vercel.app`.
+3. Name the project `dsa-people-culture` so the address is `https://people.drsalmanaesthetics.com`.
 
 ## If your Vercel address is different
-WhatsApp needs the full address of the preview image. Open `index.html`, find these two lines near the top, and replace `https://dsa-people-culture.vercel.app` with your real address:
+WhatsApp needs the full address of the preview image. Open `index.html`, find these two lines near the top, and replace `https://people.drsalmanaesthetics.com` with your real address:
 
-    <meta property="og:url" content="https://dsa-people-culture.vercel.app/">
-    <meta property="og:image" content="https://dsa-people-culture.vercel.app/og.png">
+    <meta property="og:url" content="https://people.drsalmanaesthetics.com/">
+    <meta property="og:image" content="https://people.drsalmanaesthetics.com/og.png">
 
 Commit the change and Vercel redeploys automatically.
 
