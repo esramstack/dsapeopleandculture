@@ -1034,7 +1034,7 @@ _directory(){
   if(!rows.length) return toolbar + `<div class="card">${emptyState("users","No one matches this search","Try another name, or clear the filters.")}</div>`;
   if(peopleView==="cards"||isPhone()) return toolbar + `<div class="cardgrid">${rows.map(e=>`<div class="card pcard" data-emp="${e.id}" tabindex="0">${person(e,e.role||"Role to confirm")}<div class="meta"><span>${esc(e.department||"—")} · ${esc(e.branch||"Branch to confirm")}</span>${statusPill(e.status)}</div></div>`).join("")}</div>`;
   return toolbar + `<div class="card tablewrap"><table><thead><tr><th>Employee</th><th>Role</th><th>Department</th><th>Branch</th><th>Status</th><th>Join date</th><th style="text-align:right">Actions</th></tr></thead><tbody>
-  ${rows.map(e=>`<tr class="click" data-emp="${e.id}"><td>${person(e,e.email||e.type||"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${e.branch?esc(e.branch):`<span class="muted">To confirm</span>`}</td><td>${statusPill(e.status)}</td><td class="tabnum">${e.joined?fmtShort(e.joined):`<span class="muted">—</span>`}</td><td><div class="actions"><button class="btn ghost sm" data-emp="${e.id}" title="View profile">${ic("eye")}</button><button class="btn ghost sm" data-edit="employee:${e.id}" title="Edit">${ic("edit")}</button></div></td></tr>`).join("")}
+  ${rows.map(e=>`<tr class="click" data-emp="${e.id}"><td>${person(e,e.email||e.type||"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${e.branch?esc(e.branch):`<span class="muted">To confirm</span>`}</td><td>${statusPill(e.status)}</td><td class="tabnum">${e.joined?fmtShort(e.joined):`<span class="muted">—</span>`}</td><td><div class="actions"><button class="btn ghost sm" data-emp="${e.id}" title="View profile">${ic("eye")}</button><button class="btn ghost sm" data-edit="employee:${e.id}" title="Edit">${ic("edit")}</button><button class="btn ghost sm danger" data-del="employees:${e.id}" title="Delete person">${ic("trash")}</button></div></td></tr>`).join("")}
   </tbody></table></div>`;
 },
 announcements(){
@@ -1273,11 +1273,12 @@ function openProfile(id, tabSel="overview"){
   const f=openDialog(`<div class="dossier-top"><div class="av lg">${esc(initials(e.name))}</div><div class="grow"><h2>${esc(e.name)}</h2><div class="role">${esc(e.role||"Role to confirm")}</div><div class="chips">${statusPill(e.status)}<span class="pill plain">${esc(e.department||"Department to confirm")}</span><span class="pill plain">${esc(e.branch||"Branch to confirm")}</span></div></div><button class="iconbtn" type="button" data-close aria-label="Close" style="align-self:flex-start">${ic("x")}</button></div>
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button type="button" role="tab" data-ptab="${k}" aria-selected="${k===tabSel}">${l}</button>`).join("")}</div>
   <div class="mbody" style="padding-top:20px">${panes[tabSel]}</div>
-  <div class="mfoot"><div class="left"><button class="btn" type="button" id="pEdit">${ic("edit")}Edit profile</button></div><button class="btn primary" value="close">Done</button></div>`,"wide");
+  <div class="mfoot"><div class="left"><button class="btn" type="button" id="pEdit">${ic("edit")}Edit profile</button><button class="btn danger" type="button" id="pDel">${ic("trash")}Delete person</button></div><button class="btn primary" value="close">Done</button></div>`,"wide");
   f.querySelectorAll("[data-ptab]").forEach(b=>b.onclick=()=>openProfile(id,b.dataset.ptab));
   f.querySelectorAll("[data-pf]").forEach(x=>x.onclick=()=>openFile(x.dataset.pf,false));
   f.querySelectorAll("[data-pd]").forEach(x=>x.onclick=()=>openDoc(x.dataset.pd));
   $("#pEdit").onclick=()=>openForm("employee",id);
+  $("#pDel").onclick=e=>{ const b=e.currentTarget; if(b.dataset.armed){ if(armedOk(b)) removeItem("employees",id); return; } arm(b); b.textContent="Click again to delete"; };
   const pf=$("#pFile"); if(pf) pf.onclick=()=>{ $("#filePick").dataset.emp=id; $("#filePick").click(); };
 }
 
