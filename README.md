@@ -22,3 +22,5 @@ You can change them in **Settings > Passwords**. Staff signed in with the old st
 - **Policies and announcements:** use **Hide from staff** on the item, or untick **Staff can see this** when editing.
 - **Documents:** hidden by default. Tick **Staff can see this** when uploading, or click the people icon next to a file or letter.
 - **Checking:** **Preview as staff** shows exactly what staff will see.
+
+_Last updated: 3 October 2026_
