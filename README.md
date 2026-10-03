@@ -1,31 +1,35 @@
 # DSA People & Culture portal
 
-A single static page. No build step, no backend.
+One HTML page with two sign-ins. There's no server and no database.
 
-## Files
-- `index.html`: the whole portal (sign-in, announcements, people, policies, documents, HR Agent).
-- `og.png`: the image WhatsApp shows when the link is shared.
+## Passwords
+- **Admin:** `DSA-People-2026`, for People & Culture and management. Admins see everything.
+- **Staff:** `DSA-Staff-2026`, for everyone else.
 
-## Deploy with GitHub and Vercel
-1. Create a **private** GitHub repository and upload both files to its root.
-2. In Vercel, choose **Add New > Project**, import the repository, set Framework Preset to **Other**, and deploy. No build command is needed.
-3. Name the project `dsa-people-culture` so the address is `https://people.drsalmanaesthetics.com`.
+You can change both in **Settings > Passwords**. Neither password is written in the file.
 
-## If your Vercel address is different
-WhatsApp needs the full address of the preview image. Open `index.html`, find these two lines near the top, and replace `https://people.drsalmanaesthetics.com` with your real address:
+## What staff see
+Staff see announcements, policies and the HR Agent. You decide the details:
+- **Settings > What staff can see** turns whole sections on or off: Announcements, Policies, Team directory and HR Agent.
+- **Individual items:** open a policy or announcement and click **Hide from staff**, or untick **Staff can see this** when you edit it.
+- **Settings > Preview as staff** shows the page exactly as staff will see it.
 
-    <meta property="og:url" content="https://people.drsalmanaesthetics.com/">
-    <meta property="og:image" content="https://people.drsalmanaesthetics.com/og.png">
+## Publishing a change
+Changes you make are saved only in your browser until you publish them.
+1. Open **Settings** and click **Download updated page**. You get a file called `index.html`.
+2. Upload that file to your GitHub repo in place of the current `index.html`.
+3. Vercel updates the site within a minute.
 
-Commit the change and Vercel redeploys automatically.
+## Deploying for the first time
+Upload `index.html` and `og.png` to the root of your GitHub repo. The `qa` folder holds the automated tests, and you don't need to upload it.
 
-## Checking the WhatsApp preview
-- Open `https://YOUR-ADDRESS/og.png` in a browser. The image should load.
-- Paste the link into a WhatsApp chat. The card appears after a few seconds.
-- WhatsApp caches previews. If you shared the link before fixing anything, test with `https://YOUR-ADDRESS/?v=2`.
+## Privacy
+Everything in the file is encrypted:
+- The staff password unlocks only what staff are allowed to see.
+- Staff records, documents, files, and policies or announcements hidden from staff need the admin password.
+- Uploaded files are stored encrypted in your browser and inside the page.
 
-## Things to know
-- Password: `DSA-People-2026`. Change it on the line marked CHANGE THE PASSWORD HERE.
-- The password only hides the page. Anyone with the link can read the staff names and roles in the page source. The two termination notes have been removed from this copy.
-- Edits and uploads are saved in each person's browser. Use Settings > Download updated page, then upload the new file to GitHub to share changes with everyone.
-- The HR Agent shows its launch card until 1 November 2026. After that it needs an Anthropic API key in Settings on each device.
+## Using the HR Agent
+- Until 1 November 2026, only admins can use the HR Agent, as a preview.
+- After that, staff can use it if you add an API key for staff in **Settings > HR Agent**.
+- Staff could find that key, so set a monthly spending limit on it in the Anthropic Console.
