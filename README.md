@@ -1,36 +1,24 @@
-# DSA People & Culture portal
+# DSA People & Culture portal (live version)
 
-One HTML page with two sign-ins. There's no server and no database.
+## What to upload
+Upload `index.html` and `og.png` to your GitHub repo, replacing the old files. Vercel updates the site within a minute.
+
+There are no Vercel settings to add. The `server` folder is a copy of the code that runs inside Supabase, kept for reference. You don't need to upload it.
 
 ## Passwords
-- **Admin:** `mskadmin`, for People & Culture and management. Admins see everything.
-- **Staff:** `mskstaff`, for everyone else.
+- **Admin:** `mskadmin`
+- **Staff:** `mskstaff`
 
-You can change both in **Settings > Passwords**. Neither password is written in the file.
+You can change them in **Settings > Passwords**. Staff signed in with the old staff password are signed out straight away.
 
-## What staff see
-Staff see announcements, policies and the HR Agent. You decide the details:
-- **Settings > What staff can see** turns whole sections on or off: Announcements, Policies, Documents, Team directory and HR Agent.
-- **Individual items:** open a policy or announcement and click **Hide from staff**, or untick **Staff can see this** when you edit it.
-- **Documents are hidden from staff by default.** Tick **Staff can see this** when you upload a file or add a letter, or click the people icon next to it later.
-- **Settings > Preview as staff** shows the page exactly as staff will see it.
+## How it works
+- **One page, live data:** the page is the same single `index.html`. Data comes from your Supabase project, the "roster" project, in tables whose names start with `hr_`.
+- **Files:** stored in the private Supabase Storage bucket `hr-files`, up to 25 MB each.
+- **Signing in:** happens on the server, which only sends each person what their role allows. Staff never receive staff records, contact details, notes or anything you've hidden.
+- **Changes are instant:** posting, hiding, uploading, sharing a document or changing staff access shows for staff straight away. There's nothing to publish.
 
-## Publishing a change
-Changes you make are saved only in your browser until you publish them.
-1. Open **Settings** and click **Download updated page**. You get a file called `index.html`.
-2. Upload that file to your GitHub repo in place of the current `index.html`.
-3. Vercel updates the site within a minute.
-
-## Deploying for the first time
-Upload `index.html` and `og.png` to the root of your GitHub repo. The `qa` folder holds the automated tests, and you don't need to upload it.
-
-## Privacy
-Everything in the file is encrypted:
-- The staff password unlocks only what staff are allowed to see.
-- Staff records, documents, files, and policies or announcements hidden from staff need the admin password.
-- Uploaded files are stored encrypted in your browser and inside the page.
-
-## Using the HR Agent
-- Until 1 November 2026, only admins can use the HR Agent, as a preview.
-- After that, staff can use it if you add an API key for staff in **Settings > HR Agent**.
-- Staff could find that key, so set a monthly spending limit on it in the Anthropic Console.
+## Controlling what staff see
+- **Whole sections:** Settings > What staff can see turns Announcements, Policies, Documents, Team directory and HR Agent on or off.
+- **Policies and announcements:** use **Hide from staff** on the item, or untick **Staff can see this** when editing.
+- **Documents:** hidden by default. Tick **Staff can see this** when uploading, or click the people icon next to a file or letter.
+- **Checking:** **Preview as staff** shows exactly what staff will see.
