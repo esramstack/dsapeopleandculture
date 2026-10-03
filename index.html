@@ -361,6 +361,8 @@ dialog.drawer[open]{animation:slide .24s var(--ease)}
 @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 @keyframes slide{from{transform:translateX(24px);opacity:.5}to{transform:none;opacity:1}}
 .mform{display:flex;flex-direction:column;max-height:inherit;height:100%}
+.mform>.mhead,.mform>.dossier-top,.mform>.tabs,.mform>.mfoot{flex:none}
+.mbody{min-height:0}
 .mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 24px 14px}
 .mhead h2{font-size:20px;font-weight:600}
 .mhead p{margin:3px 0 0;font-size:13px;color:var(--muted)}
@@ -432,6 +434,183 @@ mark{background:#F3E6C9;color:inherit;border-radius:3px;padding:0 1px}
   dialog.drawer{width:100vw;border-radius:0}
 }
 @media (max-width:480px){ .kpi .ic{display:none} .pagehead h1{font-size:19px} .feed.three{grid-template-columns:1fr} .kpis{grid-template-columns:1fr 1fr;gap:10px} .kpi{padding:14px} .kpi .n{font-size:28px} .split-stat{grid-template-columns:1fr} }
+
+/* ---------- Mobile & touch (iPhone first) ---------- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overscroll-behavior-y:none}
+body.lock{overflow:hidden}
+.rail{height:100vh;height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.gate{min-height:100vh;min-height:100dvh;padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.content{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.toast{bottom:calc(22px + env(safe-area-inset-bottom))}
+#syncState{bottom:calc(18px + env(safe-area-inset-bottom))}
+dialog{max-height:calc(100dvh - 48px)}
+dialog.drawer{height:100dvh;max-height:100dvh}
+.agent{height:min(calc(100dvh - 170px),820px)}
+.tablewrap,.search-res,.mbody,.thread,.subnav,.tabs{-webkit-overflow-scrolling:touch}
+.search-close{display:none}
+.iconbtn,.nav-btn,.btn,.kb-item,.sres,.menu-pop button,.menu-pop a,.qa button,.qa a,.act,.check{-webkit-tap-highlight-color:rgba(184,154,98,.15)}
+
+/* Touch devices of any width (also iPhone landscape): no zoom-on-focus, bigger targets */
+@media (pointer:coarse){
+  input,select,textarea,.field input,.sel,.f input,.f select,.f textarea,.search-panel input{font-size:16px}
+  .btn{min-height:40px}
+  .btn.sm{min-height:36px}
+  .iconbtn{width:44px;height:44px}
+  .check input{width:20px;height:20px;flex:none}
+}
+
+@media (max-width:860px){
+  .rail{width:min(300px,86vw);padding-left:max(14px,env(safe-area-inset-left));padding-bottom:max(16px,env(safe-area-inset-bottom))}
+  .nav-btn{min-height:44px;padding:10px 12px;font-size:15px}
+  .collapse-btn{min-height:44px}
+  .navlabel{font-size:11.5px}
+  .brandmark .t2,.rail .sub{font-size:11px}
+  .topbar{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));gap:8px;min-height:60px}
+  .content{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+  .app.navopen .scrim{-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+
+@media (max-width:768px){
+  body{font-size:15px}
+  .topbar{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:10px}
+  .pagehead h1{font-size:20px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tools{gap:6px}
+  .searchbtn{width:44px;height:44px;padding:0;justify-content:center;border-radius:11px}
+  .quickadd{width:44px;height:44px;padding:0;justify-content:center}
+  .content{padding-top:18px}
+  .welcome{margin-bottom:18px}
+  .welcome h2{font-size:24px}
+  .sec-title h2{font-size:18px}
+  .sec-title{flex-wrap:wrap;align-items:center;row-gap:8px}
+  .sec-title > div{display:flex;gap:6px;flex-wrap:wrap}
+  .card-pad{padding:16px}
+  .kpis{gap:10px;margin-bottom:20px}
+  .grid2{gap:14px;margin-bottom:14px}
+  .anns-home{margin-bottom:18px}
+
+  /* buttons & toolbars */
+  .btn{height:auto;min-height:44px;padding:0 16px;font-size:14.5px;border-radius:11px}
+  .btn.sm{min-height:40px;padding:0 12px;font-size:14px}
+  .toolbar{gap:8px}
+  .toolbar .field{flex:1 1 100%}
+  .toolbar .sel{flex:1 1 calc(50% - 4px);height:44px}
+  .field input{height:44px}
+  .toolbar > .btn.primary{flex:1 1 100%;justify-content:center}
+  .seg button{height:42px;padding:0 14px}
+  .seg[aria-label="View"]{display:none}
+  .seg.role-seg button{height:44px}
+
+  /* announcements */
+  .ann{padding:16px}
+  .ann h3{font-size:17px}
+  .ann-actions{gap:6px}
+  .ann-actions .btn.danger{margin-left:auto}
+  .ann-meta{font-size:12.5px}
+
+  /* lists */
+  .act{padding:12px 0;min-height:44px}
+  .kb-side{padding:8px}
+  .kb-item{padding:12px 10px;font-size:15px}
+  .article{padding:20px 18px}
+  .article h2{font-size:22px}
+  .article .body{font-size:16px;line-height:1.7}
+  .qa button,.qa a{min-height:56px;padding:12px 14px}
+  .dept{padding:12px 0}
+  .subnav button{padding:12px 14px;min-height:44px}
+  .tabs{padding:12px 16px 0}
+  .tabs button{padding:12px 12px;min-height:44px}
+  .drop{padding:28px 16px}
+  .drop.compact{padding:14px}
+
+  /* People cards */
+  .cardgrid{grid-template-columns:1fr;gap:10px}
+  .pcard{padding:14px 16px}
+  .pcard .meta{flex-wrap:wrap}
+  .pcard .meta span{overflow-wrap:anywhere}
+
+  /* Tables become stacked rows: name on top, details and actions underneath */
+  .rtable thead{display:none}
+  .rtable,.rtable tbody{display:block}
+  .rtable tr{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:3px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .rtable tbody tr:last-child{border-bottom:0}
+  .rtable td{display:block;padding:0;border:0;font-size:13px;color:var(--muted);white-space:normal!important;order:4}
+  .rtable td:first-child{order:1;flex:1 1 100%;min-width:0;color:var(--fg);font-size:14.5px}
+  .rtable:not(.noact) td:last-child{order:5;flex:none;margin-left:auto}
+  .rtable td:nth-child(2){margin-left:48px}
+  .rtable td:not(:first-child):not(:nth-child(2))::before{content:"·";margin-right:8px;color:var(--faint)}
+  .rtable:not(.noact) td:last-child::before{content:none}
+  .rtable .fname,.rtable .person{min-width:0}
+  .rtable .actions{gap:2px}
+  .rtable .actions .btn.sm{min-height:40px;min-width:40px;padding:0 10px}
+  .rtable tbody tr:hover td{background:none}
+  .rtable td .pill{font-size:12px}
+
+  /* Dialogs: near full screen, sticky header & footer, safe areas */
+  dialog,dialog.wide{width:calc(100% - 24px);max-width:none;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));border-radius:18px}
+  dialog.drawer{width:100%;height:100dvh;max-height:100dvh;border-radius:0}
+  .mhead{padding:16px 16px 10px}
+  dialog.drawer .mhead{padding-top:calc(16px + env(safe-area-inset-top))}
+  .mhead h2{font-size:19px}
+  .mhead .iconbtn,.dossier-top .iconbtn{margin:-8px -8px 0 0;flex:none}
+  .mbody{padding:4px 16px 16px;gap:14px}
+  .mfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom));gap:8px}
+  .mfoot > .btn{flex:1 1 0;justify-content:center}
+  .mfoot .left{flex:1 1 100%;margin-right:0}
+  .mfoot .left .btn{flex:1 1 auto;justify-content:center}
+  .f input,.f select,.f textarea{padding:11px 12px;min-height:46px}
+  .f label{font-size:13.5px}
+  .g2{grid-template-columns:1fr}
+  .dossier-top{padding:18px 16px 0;gap:14px}
+  .dossier-top .av.lg{width:52px;height:52px;font-size:17px}
+  .dossier-top h2{font-size:20px}
+  .infocard{padding:14px}
+  .infocard dl{grid-template-columns:minmax(96px,38%) minmax(0,1fr)}
+  .reader{padding:16px;font-size:15.5px}
+  .access-list .check{min-height:44px;padding:4px 0}
+
+  /* Popover menus become easy to tap */
+  .menu-pop{min-width:min(260px,calc(100vw - 24px))}
+  .menu-pop button,.menu-pop a{min-height:46px;font-size:15px}
+
+  /* Search: full-screen sheet */
+  .search-pop{padding:0;align-items:stretch}
+  .search-panel{width:100%;height:100%;height:100dvh;border-radius:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+  .search-panel .in{padding:10px 12px 10px 16px}
+  .search-panel .in kbd{display:none}
+  .search-close{all:unset;display:inline-flex;cursor:pointer;color:var(--green);font-weight:500;font-size:15px;padding:10px 6px;min-height:24px}
+  .search-res{max-height:none;flex:1;padding:6px 8px calc(16px + env(safe-area-inset-bottom))}
+  .sres{min-height:52px;padding:10px}
+  .sres .t,.sres .s{overflow-wrap:anywhere}
+
+  .preview-bar{flex-wrap:wrap;padding:12px 14px}
+  .banner{flex-wrap:wrap}
+  .launch{padding:24px 18px}
+}
+
+@media (max-width:430px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi .n{font-size:26px}
+  .split-stat{grid-template-columns:1fr}
+  .feed.three{grid-template-columns:1fr}
+}
+@media (max-width:375px){
+  .content{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  .welcome h2{font-size:22px}
+  .pagehead h1{font-size:18px}
+  .kpi{padding:12px}
+  .kpi .label{font-size:11px}
+  .toolbar .sel{flex:1 1 100%}
+  .ann-actions .btn.sm .lbl-hide{display:none}
+}
+/* Phones in landscape: keep dialogs and the drawer usable on a short screen */
+@media (max-height:500px) and (orientation:landscape){
+  dialog,dialog.wide{max-height:calc(100dvh - 12px)}
+  .mhead{padding-top:10px;padding-bottom:6px}
+  .dossier-top{padding-top:10px}
+  .topbar{min-height:52px;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}
+  .search-panel .in{padding-top:6px;padding-bottom:6px}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -463,7 +642,7 @@ mark{background:#F3E6C9;color:inherit;border-radius:3px;padding:0 1px}
   <div class="scrim" id="scrim"></div>
   <div class="main">
     <header class="topbar">
-      <button class="iconbtn menu" id="menuBtn" type="button" aria-label="Open navigation"><svg class="i"><use href="#i-menu"/></svg></button>
+      <button class="iconbtn menu" id="menuBtn" type="button" aria-label="Open navigation" aria-controls="rail" aria-expanded="false"><svg class="i"><use href="#i-menu"/></svg></button>
       <div class="pagehead"><h1 id="pageTitle">Overview</h1><p id="pageDesc"></p></div>
       <div class="tools">
         <button class="searchbtn" id="searchBtn" type="button" aria-label="Search"><svg class="i"><use href="#i-search"/></svg><span class="lbl">Search people, files, policies</span><kbd>Ctrl K</kbd></button>
@@ -699,6 +878,8 @@ function renderNav(){
 }
 $("#nav").addEventListener("click", e=>{ const b=e.target.closest("button[data-tab]"); if(!b) return; go(b.dataset.tab); });
 function go(t){ if(LEGACY[t]){ const [nt,m]=LEGACY[t]; if(nt==="documents") docMode=m; t=nt; } tab=t; try{history.replaceState(null,"","#"+tab)}catch{} $("#app").classList.remove("navopen"); render(); window.scrollTo(0,0); }
+const PHONE_MQ = window.matchMedia("(max-width:768px)");
+const isPhone = () => PHONE_MQ.matches;
 function render(){
   if(!TABS.find(x=>x.id===tab)) tab="overview";
   renderNav(); const t=TABS.find(x=>x.id===tab);
@@ -808,7 +989,7 @@ _staffDocs(){
   const ds=[...S.documents].filter(d=>!q||[d.title,d.kind,d.body].join(" ").toLowerCase().includes(q)).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
   if(!S.files.length&&!S.documents.length) return `<div class="card">${emptyState("folder","No documents shared yet","Forms and letters from People &amp; Culture will appear here.")}</div>`;
   return `<div class="toolbar"><div class="field">${ic("search")}<input id="fq" placeholder="Search documents" value="${esc(fileQ)}"></div></div>
-  <div class="card tablewrap">${fl.length||ds.length?`<table><thead><tr><th>Document</th><th>Category</th><th>Date</th><th style="text-align:right">Open</th></tr></thead><tbody>
+  <div class="card tablewrap">${fl.length||ds.length?`<table class="rtable"><thead><tr><th>Document</th><th>Category</th><th>Date</th><th style="text-align:right">Open</th></tr></thead><tbody>
   ${fl.map(f=>`<tr><td><div class="fname">${ficon(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div>${f.note?`<div class="e">${esc(f.note)}</div>`:""}</div></div></td><td><span class="pill plain">${esc(f.category||"Other")}</span></td><td class="tabnum" style="white-space:nowrap">${fmtShort(f.addedAt)}</td><td><div class="actions"><button class="btn ghost sm" data-file="${f.id}" title="Open">${ic("eye")}</button><button class="btn ghost sm" data-dl="${f.id}" title="Download">${ic("download")}</button></div></td></tr>`).join("")}
   ${ds.map(d=>`<tr class="click" data-doc="${d.id}"><td><div class="fname"><div class="ficon doc">${ic("doc").replace('class="i"','class="i" style="width:16px;height:16px"')}</div><div style="min-width:0"><div class="n">${esc(d.title)}</div></div></div></td><td><span class="pill plain">${esc(d.kind||"Letter")}</span></td><td class="tabnum" style="white-space:nowrap">${fmtShort(d.createdAt)}</td><td><div class="actions"><button class="btn ghost sm" data-doc-open="${d.id}" title="Open">${ic("eye")}</button></div></td></tr>`).join("")}
   </tbody></table>`:emptyState("folder","Nothing matches","Try another search.")}</div>`;
@@ -817,7 +998,7 @@ _staffDir(){
   const q=peopleQ.toLowerCase();
   const rows=S.employees.filter(e=>!q||[e.name,e.role,e.department,e.branch].join(" ").toLowerCase().includes(q)).sort((a,b)=>(a.department||"").localeCompare(b.department||"")||a.name.localeCompare(b.name));
   return `<div class="toolbar"><div class="field">${ic("search")}<input id="pq" placeholder="Search by name, role or team" value="${esc(peopleQ)}"></div></div>
-  <div class="card tablewrap">${rows.length?`<table><thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Branch</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${person(e,"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${esc(e.branch||"—")}</td></tr>`).join("")}</tbody></table>`:emptyState("users","No one matches this search","Try another name.")}</div>`;
+  <div class="card tablewrap">${rows.length?`<table class="rtable noact"><thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Branch</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${person(e,"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${esc(e.branch||"—")}</td></tr>`).join("")}</tbody></table>`:emptyState("users","No one matches this search","Try another name.")}</div>`;
 },
 documents(){
   if(!isAdmin()) return VIEWS._staffDocs();
@@ -851,7 +1032,7 @@ _directory(){
     <div class="seg" role="group" aria-label="View"><button type="button" data-view="table" aria-pressed="${peopleView==="table"}" title="Table view">${ic("list")}</button><button type="button" data-view="cards" aria-pressed="${peopleView==="cards"}" title="Card view">${ic("grid")}</button></div>
     <button class="btn primary" data-new="employee">${ic("plus")}Add employee</button></div>`;
   if(!rows.length) return toolbar + `<div class="card">${emptyState("users","No one matches this search","Try another name, or clear the filters.")}</div>`;
-  if(peopleView==="cards") return toolbar + `<div class="cardgrid">${rows.map(e=>`<div class="card pcard" data-emp="${e.id}" tabindex="0">${person(e,e.role||"Role to confirm")}<div class="meta"><span>${esc(e.department||"—")} · ${esc(e.branch||"Branch to confirm")}</span>${statusPill(e.status)}</div></div>`).join("")}</div>`;
+  if(peopleView==="cards"||isPhone()) return toolbar + `<div class="cardgrid">${rows.map(e=>`<div class="card pcard" data-emp="${e.id}" tabindex="0">${person(e,e.role||"Role to confirm")}<div class="meta"><span>${esc(e.department||"—")} · ${esc(e.branch||"Branch to confirm")}</span>${statusPill(e.status)}</div></div>`).join("")}</div>`;
   return toolbar + `<div class="card tablewrap"><table><thead><tr><th>Employee</th><th>Role</th><th>Department</th><th>Branch</th><th>Status</th><th>Join date</th><th style="text-align:right">Actions</th></tr></thead><tbody>
   ${rows.map(e=>`<tr class="click" data-emp="${e.id}"><td>${person(e,e.email||e.type||"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${e.branch?esc(e.branch):`<span class="muted">To confirm</span>`}</td><td>${statusPill(e.status)}</td><td class="tabnum">${e.joined?fmtShort(e.joined):`<span class="muted">—</span>`}</td><td><div class="actions"><button class="btn ghost sm" data-emp="${e.id}" title="View profile">${ic("eye")}</button><button class="btn ghost sm" data-edit="employee:${e.id}" title="Edit">${ic("edit")}</button></div></td></tr>`).join("")}
   </tbody></table></div>`;
@@ -875,7 +1056,7 @@ _letters(){
     <select class="sel" id="de" aria-label="Employee"><option value="">All employees</option>${people.map(e=>`<option value="${e.id}" ${e.id===docEmp?"selected":""}>${esc(e.name)}</option>`).join("")}</select>
     <select class="sel" id="dm" aria-label="Date"><option value="">Any date</option>${months.map(m=>`<option value="${m}" ${m===docMonth?"selected":""}>${new Date(m+"-01T00:00:00").toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</option>`).join("")}</select>
     <button class="btn primary" data-new="document">${ic("plus")}Add document</button></div>
-  <div class="card tablewrap">${rows.length?`<table><thead><tr><th>Document</th><th>Employee</th><th>Category</th><th>Date</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+  <div class="card tablewrap">${rows.length?`<table class="rtable"><thead><tr><th>Document</th><th>Employee</th><th>Category</th><th>Date</th><th style="text-align:right">Actions</th></tr></thead><tbody>
   ${rows.map(d=>{ const ref=(String(d.body||"").match(/DSA-HR-[A-Z]+-\d{4}-\d+[A-Z]?/)||[""])[0]; return `<tr class="click" data-doc="${d.id}"><td><div class="fname"><div class="ficon doc">${ic("doc").replace('class="i"','class="i" style="width:16px;height:16px"')}</div><div style="min-width:0"><div class="n">${esc(d.title)}</div><div class="ref">${esc(ref||"No reference")}</div></div></div></td><td>${esc(d.employeeName||"—")}</td><td><span class="pill plain">${esc(d.kind||"Draft")}</span>${d.staff===true?` <span class="pill ok">Staff can see</span>`:""}</td><td class="tabnum" style="white-space:nowrap">${fmtShort(d.createdAt)}</td><td><div class="actions"><button class="btn ghost sm" data-vis="documents:${d.id}" title="${d.staff===true?"Hide from staff":"Show to staff"}" aria-label="${d.staff===true?"Hide from staff":"Show to staff"}">${ic("users")}</button><button class="btn ghost sm" data-menu="doc:${d.id}" title="More actions">${ic("more")}</button></div></td></tr>`; }).join("")}
   </tbody></table>`:emptyState("doc",S.documents.length?"No documents match these filters":"No documents yet","Ask the HR Agent for a warning letter, offer letter or KPI sheet and save it here, or add one yourself.",`<button class="btn" data-go="agent">${ic("spark")}Draft with the HR Agent</button>`)}</div>`;
 },
@@ -885,7 +1066,7 @@ _files(){
   const has=S.files.length>0;
   return `<div class="drop ${has?"compact":""}" id="drop" tabindex="0" role="button" aria-label="Upload files"><div class="glyph">${ic("upload")}</div><div><div class="t">${has?"Drop more files or click to upload":"Drop files here or click to upload"}</div><div class="s">Contracts, CNIC copies, CVs, signed letters and certificates. PDF, images, Word and Excel.</div></div></div>
   ${has?`<div class="toolbar"><div class="field">${ic("search")}<input id="fq" placeholder="Search by file name, person or note" value="${esc(fileQ)}"></div><select class="sel" id="fc" aria-label="Category"><option value="">All categories</option>${FILE_CATS.map(c=>`<option ${c===fileCat?"selected":""}>${c}</option>`).join("")}</select></div>
-  <div class="card tablewrap">${rows.length?`<table><thead><tr><th>File</th><th>Category</th><th>Employee</th><th>Size</th><th>Uploaded</th><th style="text-align:right">Actions</th></tr></thead><tbody>
+  <div class="card tablewrap">${rows.length?`<table class="rtable"><thead><tr><th>File</th><th>Category</th><th>Employee</th><th>Size</th><th>Uploaded</th><th style="text-align:right">Actions</th></tr></thead><tbody>
   ${rows.map(f=>`<tr><td><div class="fname">${ficon(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div>${f.note?`<div class="e">${esc(f.note)}</div>`:""}</div></div></td><td><span class="pill plain">${esc(f.category||"Other")}</span>${f.staff===true?` <span class="pill ok">Staff can see</span>`:""}</td><td>${esc(f.employeeName||"—")}</td><td class="tabnum muted">${sizeFmt(f.size||0)}</td><td class="tabnum" style="white-space:nowrap">${fmtShort(f.addedAt)}</td><td><div class="actions"><button class="btn ghost sm" data-file="${f.id}" title="Open">${ic("eye")}</button><button class="btn ghost sm" data-dl="${f.id}" title="Download">${ic("download")}</button><button class="btn ghost sm" data-vis="files:${f.id}" title="${f.staff===true?"Hide from staff":"Show to staff"}" aria-label="${f.staff===true?"Hide from staff":"Show to staff"}">${ic("users")}</button><button class="btn ghost sm danger" data-del="files:${f.id}" title="Remove">${ic("trash")}</button></div></td></tr>`).join("")}
   </tbody></table>`:emptyState("folder","No files match","Try another search or category.")}</div>`:`<div class="card">${emptyState("folder","No files yet","Upload an HR document to keep it with the employee record.")}</div>`}
   <p class="note" style="margin-top:12px">Files are stored privately and hidden from staff unless you tick “Staff can see” (the people icon). Changes apply for staff straight away.</p>`;
@@ -1113,7 +1294,7 @@ function openForm(kind,id,pre={}){
       <div class="g2"><div class="f"><label for="fe-branch">Branch</label><select id="fe-branch">${["","Islamabad","Peshawar","Both branches","Remote"].map(b=>`<option value="${b}" ${b===(e.branch||"")?"selected":""}>${b||"To confirm"}</option>`).join("")}</select></div><div class="f"><label for="fe-entity">Entity</label><select id="fe-entity">${["Dr. Salman Aesthetics","MSK Aesthetics","Cosmetic Expert","DSA Group"].map(b=>`<option ${b===e.entity?"selected":""}>${b}</option>`).join("")}</select></div></div>
       <div class="g2"><div class="f"><label for="fe-status">Status</label><select id="fe-status">${STATUSES.map(s=>`<option ${s===e.status?"selected":""}>${s}</option>`).join("")}</select></div><div class="f"><label for="fe-type">Employment type</label><select id="fe-type">${["Full-time","Part-time","Contractor","Consultant"].map(s=>`<option ${s===e.type?"selected":""}>${s}</option>`).join("")}</select></div></div>
       <div class="g2"><div class="f"><label for="fe-joined">Join date</label><input id="fe-joined" type="date" value="${esc(e.joined)}"></div><div class="f"><label for="fe-manager">Reporting manager</label><input id="fe-manager" value="${esc(e.manager)}"></div></div></div>
-    <div class="fsec"><h3>Contact details</h3><div class="g2"><div class="f"><label for="fe-phone">Phone</label><input id="fe-phone" value="${esc(e.phone)}"></div><div class="f"><label for="fe-email">Email</label><input id="fe-email" type="email" value="${esc(e.email)}"></div></div></div>
+    <div class="fsec"><h3>Contact details</h3><div class="g2"><div class="f"><label for="fe-phone">Phone</label><input id="fe-phone" type="tel" inputmode="tel" autocomplete="off" value="${esc(e.phone)}"></div><div class="f"><label for="fe-email">Email</label><input id="fe-email" type="email" value="${esc(e.email)}"></div></div></div>
     <div class="fsec"><h3>Notes</h3><div class="f"><label for="fe-notes">Internal notes</label><textarea id="fe-notes">${esc(e.notes)}</textarea></div></div></div>${foot}`;
   } else if(kind==="announcement"){ const a=S.announcements.find(x=>x.id===id)||{date:today(),category:"General",audience:"All staff"}; cls="wide";
     html=`${mhead(id?"Edit announcement":"Post announcement","Staff see it as soon as you post it. Share it to WhatsApp afterwards.")}<div class="mbody">
@@ -1215,12 +1396,13 @@ $("#userBtn").onclick=e=>{ e.stopPropagation(); popMenu(e.currentTarget,[
 ]); };
 $("#searchBtn").onclick=openSearch;
 document.addEventListener("keydown",e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"&&!$("#app").hidden){ e.preventDefault(); openSearch(); } });
-function hl(text,q){ const t=esc(text); if(!q) return t; const qq=q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); return t.replace(new RegExp("("+esc(qq)+")","ig"),"<mark>$1</mark>"); }
+function hl(text,q){ const t=String(text??""); if(!q) return esc(t); const re=new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig"); return t.split(re).map((part,i)=>i%2?`<mark>${esc(part)}</mark>`:esc(part)).join(""); }
 function openSearch(){
   if($("#searchPop")) return;
   const w=document.createElement("div"); w.className="search-pop"; w.id="searchPop";
-  w.innerHTML=`<div class="search-panel" role="dialog" aria-label="Search"><div class="in">${ic("search")}<input id="gq" placeholder="${isAdmin()?"Search people, announcements, policies, documents and files":"Search announcements, policies, documents and the team"}" autocomplete="off"><kbd style="font-size:11px;border:1px solid var(--line-strong);border-radius:5px;padding:1px 6px;color:var(--faint)">Esc</kbd></div><div class="search-res" id="gres"></div></div>`;
+  w.innerHTML=`<div class="search-panel" role="dialog" aria-label="Search"><div class="in">${ic("search")}<input id="gq" placeholder="${isAdmin()?"Search people, announcements, policies, documents and files":"Search announcements, policies, documents and the team"}" autocomplete="off" enterkeyhint="search" autocapitalize="off" spellcheck="false"><kbd style="font-size:11px;border:1px solid var(--line-strong);border-radius:5px;padding:1px 6px;color:var(--faint)">Esc</kbd><button class="search-close" type="button" id="gclose">Cancel</button></div><div class="search-res" id="gres"></div></div>`;
   document.body.appendChild(w);
+  document.body.classList.add("lock"); $("#gclose").onclick=()=>closeSearch();
   const inp=$("#gq"); let sel=0, flat=[];
   const run=()=>{
     const q=inp.value.trim(); const ql=q.toLowerCase(); const has=s=>String(s||"").toLowerCase().includes(ql);
@@ -1250,12 +1432,19 @@ function openSearch(){
   w.onclick=e=>{ if(e.target===w) closeSearch(); };
   run(); inp.focus();
 }
-function closeSearch(){ $("#searchPop")?.remove(); }
+function closeSearch(){ $("#searchPop")?.remove(); if(!$("#app").classList.contains("navopen")) document.body.classList.remove("lock"); }
 
 /* ---------- sidebar collapse & mobile drawer ---------- */
 $("#collapseBtn").onclick=()=>{ const c=$("#app").classList.toggle("collapsed"); ls.set("dsa-po-nav",c?"collapsed":"open"); };
-$("#menuBtn").onclick=()=>$("#app").classList.add("navopen");
-$("#scrim").onclick=()=>$("#app").classList.remove("navopen");
+function setDrawer(open){ const a=$("#app"); a.classList.toggle("navopen",!!open); document.body.classList.toggle("lock",!!open); $("#menuBtn").setAttribute("aria-expanded",String(!!open)); if(open){ const c=a.querySelector('#nav [aria-current="true"]')||a.querySelector("#nav button"); c&&c.focus({preventScroll:true}); } }
+new MutationObserver(()=>{ const open=$("#app").classList.contains("navopen"); document.body.classList.toggle("lock",open); $("#menuBtn").setAttribute("aria-expanded",String(open)); }).observe($("#app"),{attributes:true,attributeFilter:["class"]});
+$("#menuBtn").onclick=()=>setDrawer(true);
+$("#scrim").onclick=()=>setDrawer(false);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#app").classList.contains("navopen")&&!$("#dlg").open&&!$("#searchPop")){ setDrawer(false); $("#menuBtn").focus(); } });
+const DRAWER_MQ=window.matchMedia("(max-width:860px)");
+const onBreakpoint=()=>{ if(!DRAWER_MQ.matches) setDrawer(false); if(S&&!$("#app").hidden) render(); };
+(DRAWER_MQ.addEventListener?DRAWER_MQ.addEventListener("change",onBreakpoint):DRAWER_MQ.addListener(onBreakpoint));
+(PHONE_MQ.addEventListener?PHONE_MQ.addEventListener("change",()=>{ if(S&&!$("#app").hidden) render(); }):PHONE_MQ.addListener(()=>{ if(S&&!$("#app").hidden) render(); }));
 
 /* ---------- agent ---------- */
 let turns=[], view=[], ctl=null, busy=false, current=null;

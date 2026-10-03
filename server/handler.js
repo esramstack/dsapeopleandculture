@@ -8,7 +8,7 @@
 const BUCKET = "hr-files";
 const SESSION_HOURS = 12;
 const MAX_FILE = 25 * 1024 * 1024;
-const LOGIN_WINDOW_MIN = 15, LOGIN_MAX_FAILS = 8;
+const LOGIN_WINDOW_MIN = 15, LOGIN_MAX_FAILS = 8, LOGIN_MAX_FAILS_ALL = 60;
 const PBKDF2_ITER = 100000;
 const DEFAULT_ACCESS = { announcements: true, policies: true, documents: true, directory: false, agent: true };
 
@@ -130,10 +130,10 @@ export function createHandler(cfg) {
   }
 
   // ---- login throttling ----
-  async function tooMany(key) {
+  async function tooMany(key, max = LOGIN_MAX_FAILS) {
     const since = new Date(now() - LOGIN_WINDOW_MIN * 60e3).toISOString();
-    const rows = await sb(`/rest/v1/hr_login_attempts?select=id&key=eq.${enc(key)}&at=gte.${enc(since)}`);
-    return (rows || []).length >= LOGIN_MAX_FAILS;
+    const rows = await sb(`/rest/v1/hr_login_attempts?select=id&key=eq.${enc(key)}&at=gte.${enc(since)}&limit=${max}`);
+    return (rows || []).length >= max;
   }
   const fail = (key) => sb("/rest/v1/hr_login_attempts", { method: "POST", body: { key }, prefer: "return=minimal" });
 
@@ -176,12 +176,14 @@ export function createHandler(cfg) {
       const role = body.role === "admin" ? "admin" : body.role === "staff" ? "staff" : null;
       if (!role) throw new HttpError(400, "Choose Staff or Admin.");
       if (!normPw(body.password)) throw new HttpError(400, "Enter the password.");
-      const ip = String(req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown").split(",")[0].trim();
-      const key = `${role}:${ip}`;
+      // cf-connecting-ip / x-real-ip are set by Supabase's proxy; x-forwarded-for can be faked by the caller.
+      const ip = String(req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+      const key = `${role}:${ip}`, all = `${role}:all`;
       if (await tooMany(key)) throw new HttpError(429, `Too many attempts. Please wait ${LOGIN_WINDOW_MIN} minutes and try again.`);
+      if (await tooMany(all, LOGIN_MAX_FAILS_ALL)) throw new HttpError(429, `Too many wrong passwords from different places. Sign-in is paused for ${LOGIN_WINDOW_MIN} minutes.`);
       const s = await settings(true);
       if (!(await checkPassword(body.password, s.passwords?.[role]))) {
-        await fail(key);
+        await Promise.all([fail(key), fail(all)]);
         throw new HttpError(401, role === "admin" ? "That admin password is not right." : "That password is not right. Ask People & Culture for the staff password.");
       }
       return { token: await signToken(role), role };
