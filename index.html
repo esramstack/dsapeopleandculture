@@ -657,7 +657,7 @@ dialog.drawer{height:100dvh;max-height:100dvh}
 <dialog id="dlg"><form id="dlgForm" method="dialog" class="mform"></form></dialog>
 <div class="toast" id="toast" hidden></div>
 <span id="syncState" aria-live="polite"></span>
-<input type="file" id="filePick" multiple hidden>
+<input type="file" id="filePick" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.rtf,.jpg,.jpeg,.png,.heic,.webp">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
@@ -751,6 +751,15 @@ const DOC_COLS = ["files","documents"];
 const staffCan = (col,x) => DOC_COLS.includes(col) ? x.staff === true : x.staff !== false;
 const stripPerson = ({employeeId,employeeName,...r}) => r;
 const normPw = p => String(p||"").trim().toLowerCase();
+/* quick feedback only; the server makes the real check */
+const WEAK_PW = ["password","passw0rd","admin","administrator","staff","people","culture","peopleandculture","hr","dsa","dsagroup","msk","mskaesthetics","drsalman","salman","drsalmanaesthetics","aesthetics","clinic","welcome","letmein","qwerty","qwertyuiop","abc","abcdef","islamabad","peshawar","pakistan","changeme","secret","login","portal"];
+function pwProblem(p){
+  if(p.length<12) return "Use at least 12 characters. A short phrase of three or four words works well.";
+  if(p.trim()!==p) return "Remove spaces from the start and end of the password.";
+  const letters=p.toLowerCase().replace(/[^a-z]/g,"");
+  if(/^(.)\1+$/.test(p)||letters.length<4||WEAK_PW.includes(letters)||WEAK_PW.some(w=>letters.length%w.length===0&&letters===w.repeat(letters.length/w.length))) return "That password is too easy to guess. Try a phrase of a few unrelated words.";
+  return null;
+}
 
 const SESS_KEY="dsa-po-token";
 const sess = { get(){ try{ return sessionStorage.getItem(SESS_KEY); }catch{ return sess._v||null; } }, set(v){ try{ v?sessionStorage.setItem(SESS_KEY,v):sessionStorage.removeItem(SESS_KEY); }catch{} sess._v=v; } };
@@ -847,10 +856,14 @@ $("#loginForm").onsubmit=async e=>{
 async function resume(){
   if(!sess.get()) return false;
   $("#gate").hidden=true; $("#app").hidden=false; $("#main").innerHTML=`<div class="loading">Loading…</div>`;
-  try{ await loadData(); return true; }catch(e){ if(sess.get()){ $("#main").innerHTML=`<div class="card">${emptyState("settings","Could not load the portal",esc(e.message),`<button class="btn" type="button" onclick="location.reload()">Try again</button>`)}</div>`; } return false; }
+  try{ await loadData(); return true; }catch(e){ if(sess.get()){ $("#main").innerHTML=`<div class="card">${emptyState("settings","Could not load the portal",esc(e.message),`<button class="btn" type="button" id="retryLoad">Try again</button>`)}</div>`; const rb=$("#retryLoad"); if(rb) rb.onclick=()=>location.reload(); } return false; }
 }
 function showGate(msg){ S=null; $("#app").hidden=true; $("#gate").hidden=false; $("#main").innerHTML=""; if(msg) $("#pwErr").textContent=msg; }
-function signOut(){ sess.set(null); try{ history.replaceState(null,"",location.pathname); }catch{} location.reload(); }
+/* Wipe everything on screen and in memory first, so nothing private is visible even before the reload lands. */
+function wipe(){ S=ADMIN_S=SNAP=null; PREVIEW=null; const d=$("#dlg"); if(d){ if(d.open) d.close(); $("#dlgForm").innerHTML=""; } closeSearch(); $("#nav").innerHTML=""; showGate(); }
+function signOut(){ sess.set(null); wipe(); try{ history.replaceState(null,"",location.pathname); }catch{} location.reload(); }
+/* A page restored from the back/forward cache must not show HR data once the session is gone. */
+window.addEventListener("pageshow",e=>{ if(e.persisted&&!sess.get()){ wipe(); location.reload(); } });
 $("#logoutBtn").onclick=signOut;
 
 /* ---------- preview as staff ---------- */
@@ -934,7 +947,7 @@ overview(){
   </div>
   <div class="grid2">
     <section class="card card-pad"><div class="sec-title"><h2>Policies in effect</h2><button class="btn ghost sm" data-go="policies">Open library</button></div>
-      <div class="activity">${pols.map(p=>`<div class="act" data-polgo="${p.id}" tabindex="0"><div class="dot">${ic("book")}</div><div style="min-width:0;flex:1"><div class="t">${esc(p.title)}</div><div class="s">${esc([p.code,p.effective?"effective "+p.effective:""].filter(Boolean).join(" · "))}</div></div>${/superseded/i.test(p.note||"")?`<span class="pill amber">Section updated</span>`:`<span class="pill ok">In effect</span>`}</div>`).join("")||emptyState("book","No policies yet","Add the handbook and current policies to the library.")}</div>
+      <div class="activity">${pols.map(p=>`<div class="act" data-polgo="${esc(p.id)}" tabindex="0"><div class="dot">${ic("book")}</div><div style="min-width:0;flex:1"><div class="t">${esc(p.title)}</div><div class="s">${esc([p.code,p.effective?"effective "+p.effective:""].filter(Boolean).join(" · "))}</div></div>${/superseded/i.test(p.note||"")?`<span class="pill amber">Section updated</span>`:`<span class="pill ok">In effect</span>`}</div>`).join("")||emptyState("book","No policies yet","Add the handbook and current policies to the library.")}</div>
       <div class="sec-title" style="margin:22px 0 6px"><h2>Latest documents</h2><button class="btn ghost sm" data-go="documents">Open library</button></div>
       <div class="activity">${latest.map((a,i)=>`<div class="act" data-act="${i}" tabindex="0"><div class="dot" ${a.kind==="file"?'style="border:0;background:none"':""}>${a.kind==="file"?ficon(a.f):ic("doc")}</div><div style="min-width:0"><div class="t">${esc(a.t)}</div><div class="s">${esc(a.s)} · ${fmtShort(a.when)}</div></div></div>`).join("")||emptyState("doc","No documents yet","Upload contracts and signed letters, or draft a letter with the HR Agent.")}</div>
     </section>
@@ -967,7 +980,7 @@ _staffHome(){
     <section class="card card-pad"><div class="sec-title"><h2>Our purpose</h2><span class="meta">From the Employee Handbook</span></div>
       <div class="purpose"><div><div class="label">Mission</div><p>${esc(C.mission||"")}</p></div><div><div class="label">Vision</div><p>${esc(C.vision||"")}</p></div></div>
       ${a.policies&&pols.length?`<div class="sec-title" style="margin:22px 0 6px"><h2>Policies</h2><button class="btn ghost sm" data-go="policies">Open library</button></div>
-      <div class="activity">${pols.map(p=>`<div class="act" data-polgo="${p.id}" tabindex="0"><div class="dot">${ic("book")}</div><div style="min-width:0;flex:1"><div class="t">${esc(p.title)}</div><div class="s">${esc([p.code,p.effective?"effective "+p.effective:""].filter(Boolean).join(" · "))}</div></div></div>`).join("")}</div>`:""}
+      <div class="activity">${pols.map(p=>`<div class="act" data-polgo="${esc(p.id)}" tabindex="0"><div class="dot">${ic("book")}</div><div style="min-width:0;flex:1"><div class="t">${esc(p.title)}</div><div class="s">${esc([p.code,p.effective?"effective "+p.effective:""].filter(Boolean).join(" · "))}</div></div></div>`).join("")}</div>`:""}
     </section>
     <section class="card card-pad"><div class="sec-title"><h2>Quick links</h2></div>
       <div class="qa">
@@ -990,8 +1003,8 @@ _staffDocs(){
   if(!S.files.length&&!S.documents.length) return `<div class="card">${emptyState("folder","No documents shared yet","Forms and letters from People &amp; Culture will appear here.")}</div>`;
   return `<div class="toolbar"><div class="field">${ic("search")}<input id="fq" placeholder="Search documents" value="${esc(fileQ)}"></div></div>
   <div class="card tablewrap">${fl.length||ds.length?`<table class="rtable"><thead><tr><th>Document</th><th>Category</th><th>Date</th><th style="text-align:right">Open</th></tr></thead><tbody>
-  ${fl.map(f=>`<tr><td><div class="fname">${ficon(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div>${f.note?`<div class="e">${esc(f.note)}</div>`:""}</div></div></td><td><span class="pill plain">${esc(f.category||"Other")}</span></td><td class="tabnum" style="white-space:nowrap">${fmtShort(f.addedAt)}</td><td><div class="actions"><button class="btn ghost sm" data-file="${f.id}" title="Open">${ic("eye")}</button><button class="btn ghost sm" data-dl="${f.id}" title="Download">${ic("download")}</button></div></td></tr>`).join("")}
-  ${ds.map(d=>`<tr class="click" data-doc="${d.id}"><td><div class="fname"><div class="ficon doc">${ic("doc").replace('class="i"','class="i" style="width:16px;height:16px"')}</div><div style="min-width:0"><div class="n">${esc(d.title)}</div></div></div></td><td><span class="pill plain">${esc(d.kind||"Letter")}</span></td><td class="tabnum" style="white-space:nowrap">${fmtShort(d.createdAt)}</td><td><div class="actions"><button class="btn ghost sm" data-doc-open="${d.id}" title="Open">${ic("eye")}</button></div></td></tr>`).join("")}
+  ${fl.map(f=>`<tr><td><div class="fname">${ficon(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div>${f.note?`<div class="e">${esc(f.note)}</div>`:""}</div></div></td><td><span class="pill plain">${esc(f.category||"Other")}</span></td><td class="tabnum" style="white-space:nowrap">${fmtShort(f.addedAt)}</td><td><div class="actions"><button class="btn ghost sm" data-file="${esc(f.id)}" title="Open">${ic("eye")}</button><button class="btn ghost sm" data-dl="${esc(f.id)}" title="Download">${ic("download")}</button></div></td></tr>`).join("")}
+  ${ds.map(d=>`<tr class="click" data-doc="${esc(d.id)}"><td><div class="fname"><div class="ficon doc">${ic("doc").replace('class="i"','class="i" style="width:16px;height:16px"')}</div><div style="min-width:0"><div class="n">${esc(d.title)}</div></div></div></td><td><span class="pill plain">${esc(d.kind||"Letter")}</span></td><td class="tabnum" style="white-space:nowrap">${fmtShort(d.createdAt)}</td><td><div class="actions"><button class="btn ghost sm" data-doc-open="${esc(d.id)}" title="Open">${ic("eye")}</button></div></td></tr>`).join("")}
   </tbody></table>`:emptyState("folder","Nothing matches","Try another search.")}</div>`;
 },
 _staffDir(){
@@ -1032,9 +1045,9 @@ _directory(){
     <div class="seg" role="group" aria-label="View"><button type="button" data-view="table" aria-pressed="${peopleView==="table"}" title="Table view">${ic("list")}</button><button type="button" data-view="cards" aria-pressed="${peopleView==="cards"}" title="Card view">${ic("grid")}</button></div>
     <button class="btn primary" data-new="employee">${ic("plus")}Add employee</button></div>`;
   if(!rows.length) return toolbar + `<div class="card">${emptyState("users","No one matches this search","Try another name, or clear the filters.")}</div>`;
-  if(peopleView==="cards"||isPhone()) return toolbar + `<div class="cardgrid">${rows.map(e=>`<div class="card pcard" data-emp="${e.id}" tabindex="0">${person(e,e.role||"Role to confirm")}<div class="meta"><span>${esc(e.department||"—")} · ${esc(e.branch||"Branch to confirm")}</span>${statusPill(e.status)}</div></div>`).join("")}</div>`;
+  if(peopleView==="cards"||isPhone()) return toolbar + `<div class="cardgrid">${rows.map(e=>`<div class="card pcard" data-emp="${esc(e.id)}" tabindex="0">${person(e,e.role||"Role to confirm")}<div class="meta"><span>${esc(e.department||"—")} · ${esc(e.branch||"Branch to confirm")}</span>${statusPill(e.status)}</div></div>`).join("")}</div>`;
   return toolbar + `<div class="card tablewrap"><table><thead><tr><th>Employee</th><th>Role</th><th>Department</th><th>Branch</th><th>Status</th><th>Join date</th><th style="text-align:right">Actions</th></tr></thead><tbody>
-  ${rows.map(e=>`<tr class="click" data-emp="${e.id}"><td>${person(e,e.email||e.type||"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${e.branch?esc(e.branch):`<span class="muted">To confirm</span>`}</td><td>${statusPill(e.status)}</td><td class="tabnum">${e.joined?fmtShort(e.joined):`<span class="muted">—</span>`}</td><td><div class="actions"><button class="btn ghost sm" data-emp="${e.id}" title="View profile">${ic("eye")}</button><button class="btn ghost sm" data-edit="employee:${e.id}" title="Edit">${ic("edit")}</button><button class="btn ghost sm danger" data-del="employees:${e.id}" title="Delete person">${ic("trash")}</button></div></td></tr>`).join("")}
+  ${rows.map(e=>`<tr class="click" data-emp="${esc(e.id)}"><td>${person(e,e.email||e.type||"")}</td><td>${esc(e.role||"—")}</td><td>${esc(e.department||"—")}</td><td>${e.branch?esc(e.branch):`<span class="muted">To confirm</span>`}</td><td>${statusPill(e.status)}</td><td class="tabnum">${e.joined?fmtShort(e.joined):`<span class="muted">—</span>`}</td><td><div class="actions"><button class="btn ghost sm" data-emp="${esc(e.id)}" title="View profile">${ic("eye")}</button><button class="btn ghost sm" data-edit="employee:${esc(e.id)}" title="Edit">${ic("edit")}</button><button class="btn ghost sm danger" data-del="employees:${esc(e.id)}" title="Delete person">${ic("trash")}</button></div></td></tr>`).join("")}
   </tbody></table></div>`;
 },
 announcements(){
@@ -1053,11 +1066,11 @@ _letters(){
   const rows=[...S.documents].filter(d=>(!docKind||(d.kind||"Draft")===docKind)&&(!docEmp||d.employeeId===docEmp)&&(!docMonth||(d.createdAt||"").startsWith(docMonth))&&(!q||[d.title,d.kind,d.employeeName,d.body].join(" ").toLowerCase().includes(q))).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));
   return `<div class="toolbar"><div class="field">${ic("search")}<input id="dq" placeholder="Search documents" value="${esc(docQ)}"></div>
     <select class="sel" id="dk" aria-label="Category"><option value="">All categories</option>${DOC_KINDS.map(k=>`<option ${k===docKind?"selected":""}>${k}</option>`).join("")}</select>
-    <select class="sel" id="de" aria-label="Employee"><option value="">All employees</option>${people.map(e=>`<option value="${e.id}" ${e.id===docEmp?"selected":""}>${esc(e.name)}</option>`).join("")}</select>
+    <select class="sel" id="de" aria-label="Employee"><option value="">All employees</option>${people.map(e=>`<option value="${esc(e.id)}" ${e.id===docEmp?"selected":""}>${esc(e.name)}</option>`).join("")}</select>
     <select class="sel" id="dm" aria-label="Date"><option value="">Any date</option>${months.map(m=>`<option value="${m}" ${m===docMonth?"selected":""}>${new Date(m+"-01T00:00:00").toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</option>`).join("")}</select>
     <button class="btn primary" data-new="document">${ic("plus")}Add document</button></div>
   <div class="card tablewrap">${rows.length?`<table class="rtable"><thead><tr><th>Document</th><th>Employee</th><th>Category</th><th>Date</th><th style="text-align:right">Actions</th></tr></thead><tbody>
-  ${rows.map(d=>{ const ref=(String(d.body||"").match(/DSA-HR-[A-Z]+-\d{4}-\d+[A-Z]?/)||[""])[0]; return `<tr class="click" data-doc="${d.id}"><td><div class="fname"><div class="ficon doc">${ic("doc").replace('class="i"','class="i" style="width:16px;height:16px"')}</div><div style="min-width:0"><div class="n">${esc(d.title)}</div><div class="ref">${esc(ref||"No reference")}</div></div></div></td><td>${esc(d.employeeName||"—")}</td><td><span class="pill plain">${esc(d.kind||"Draft")}</span>${d.staff===true?` <span class="pill ok">Staff can see</span>`:""}</td><td class="tabnum" style="white-space:nowrap">${fmtShort(d.createdAt)}</td><td><div class="actions"><button class="btn ghost sm" data-vis="documents:${d.id}" title="${d.staff===true?"Hide from staff":"Show to staff"}" aria-label="${d.staff===true?"Hide from staff":"Show to staff"}">${ic("users")}</button><button class="btn ghost sm" data-menu="doc:${d.id}" title="More actions">${ic("more")}</button></div></td></tr>`; }).join("")}
+  ${rows.map(d=>{ const ref=(String(d.body||"").match(/DSA-HR-[A-Z]+-\d{4}-\d+[A-Z]?/)||[""])[0]; return `<tr class="click" data-doc="${esc(d.id)}"><td><div class="fname"><div class="ficon doc">${ic("doc").replace('class="i"','class="i" style="width:16px;height:16px"')}</div><div style="min-width:0"><div class="n">${esc(d.title)}</div><div class="ref">${esc(ref||"No reference")}</div></div></div></td><td>${esc(d.employeeName||"—")}</td><td><span class="pill plain">${esc(d.kind||"Draft")}</span>${d.staff===true?` <span class="pill ok">Staff can see</span>`:""}</td><td class="tabnum" style="white-space:nowrap">${fmtShort(d.createdAt)}</td><td><div class="actions"><button class="btn ghost sm" data-vis="documents:${esc(d.id)}" title="${d.staff===true?"Hide from staff":"Show to staff"}" aria-label="${d.staff===true?"Hide from staff":"Show to staff"}">${ic("users")}</button><button class="btn ghost sm" data-menu="doc:${esc(d.id)}" title="More actions">${ic("more")}</button></div></td></tr>`; }).join("")}
   </tbody></table>`:emptyState("doc",S.documents.length?"No documents match these filters":"No documents yet","Ask the HR Agent for a warning letter, offer letter or KPI sheet and save it here, or add one yourself.",`<button class="btn" data-go="agent">${ic("spark")}Draft with the HR Agent</button>`)}</div>`;
 },
 _files(){
@@ -1067,7 +1080,7 @@ _files(){
   return `<div class="drop ${has?"compact":""}" id="drop" tabindex="0" role="button" aria-label="Upload files"><div class="glyph">${ic("upload")}</div><div><div class="t">${has?"Drop more files or click to upload":"Drop files here or click to upload"}</div><div class="s">Contracts, CNIC copies, CVs, signed letters and certificates. PDF, images, Word and Excel.</div></div></div>
   ${has?`<div class="toolbar"><div class="field">${ic("search")}<input id="fq" placeholder="Search by file name, person or note" value="${esc(fileQ)}"></div><select class="sel" id="fc" aria-label="Category"><option value="">All categories</option>${FILE_CATS.map(c=>`<option ${c===fileCat?"selected":""}>${c}</option>`).join("")}</select></div>
   <div class="card tablewrap">${rows.length?`<table class="rtable"><thead><tr><th>File</th><th>Category</th><th>Employee</th><th>Size</th><th>Uploaded</th><th style="text-align:right">Actions</th></tr></thead><tbody>
-  ${rows.map(f=>`<tr><td><div class="fname">${ficon(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div>${f.note?`<div class="e">${esc(f.note)}</div>`:""}</div></div></td><td><span class="pill plain">${esc(f.category||"Other")}</span>${f.staff===true?` <span class="pill ok">Staff can see</span>`:""}</td><td>${esc(f.employeeName||"—")}</td><td class="tabnum muted">${sizeFmt(f.size||0)}</td><td class="tabnum" style="white-space:nowrap">${fmtShort(f.addedAt)}</td><td><div class="actions"><button class="btn ghost sm" data-file="${f.id}" title="Open">${ic("eye")}</button><button class="btn ghost sm" data-dl="${f.id}" title="Download">${ic("download")}</button><button class="btn ghost sm" data-vis="files:${f.id}" title="${f.staff===true?"Hide from staff":"Show to staff"}" aria-label="${f.staff===true?"Hide from staff":"Show to staff"}">${ic("users")}</button><button class="btn ghost sm danger" data-del="files:${f.id}" title="Remove">${ic("trash")}</button></div></td></tr>`).join("")}
+  ${rows.map(f=>`<tr><td><div class="fname">${ficon(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div>${f.note?`<div class="e">${esc(f.note)}</div>`:""}</div></div></td><td><span class="pill plain">${esc(f.category||"Other")}</span>${f.staff===true?` <span class="pill ok">Staff can see</span>`:""}</td><td>${esc(f.employeeName||"—")}</td><td class="tabnum muted">${sizeFmt(f.size||0)}</td><td class="tabnum" style="white-space:nowrap">${fmtShort(f.addedAt)}</td><td><div class="actions"><button class="btn ghost sm" data-file="${esc(f.id)}" title="Open">${ic("eye")}</button><button class="btn ghost sm" data-dl="${esc(f.id)}" title="Download">${ic("download")}</button><button class="btn ghost sm" data-vis="files:${esc(f.id)}" title="${f.staff===true?"Hide from staff":"Show to staff"}" aria-label="${f.staff===true?"Hide from staff":"Show to staff"}">${ic("users")}</button><button class="btn ghost sm danger" data-del="files:${esc(f.id)}" title="Remove">${ic("trash")}</button></div></td></tr>`).join("")}
   </tbody></table>`:emptyState("folder","No files match","Try another search or category.")}</div>`:`<div class="card">${emptyState("folder","No files yet","Upload an HR document to keep it with the employee record.")}</div>`}
   <p class="note" style="margin-top:12px">Files are stored privately and hidden from staff unless you tick “Staff can see” (the people icon). Changes apply for staff straight away.</p>`;
 },
@@ -1078,26 +1091,26 @@ policies(){
   const cur=ps.find(p=>p.id===policySel)||ps[0];
   const status = p => /has not been loaded/i.test(p.body||"") ? `<span class="pill amber">Text to be added</span>` : `<span class="pill ok">In effect</span>`;
   return `<div class="toolbar"><div class="field">${ic("search")}<input id="polq" placeholder="Search policies" value="${esc(policyQ)}"></div>${isAdmin()?`<button class="btn primary" data-new="policy">${ic("plus")}Add policy</button>`:""}</div>
-  <div class="kb"><nav class="card kb-side" aria-label="Policies">${cats.map(c=>`<div class="kb-cat">${esc(c)}</div>${ps.filter(p=>(p.category||"General")===c).map(p=>`<button class="kb-item" data-pol="${p.id}" aria-current="${cur&&p.id===cur.id}">${esc(p.title)}${isAdmin()&&p.staff===false?` <span class="muted" style="font-size:11.5px">· Admins only</span>`:""}</button>`).join("")}`).join("") || `<div class="note" style="padding:10px">No policies match.</div>`}</nav>
+  <div class="kb"><nav class="card kb-side" aria-label="Policies">${cats.map(c=>`<div class="kb-cat">${esc(c)}</div>${ps.filter(p=>(p.category||"General")===c).map(p=>`<button class="kb-item" data-pol="${esc(p.id)}" aria-current="${cur&&p.id===cur.id}">${esc(p.title)}${isAdmin()&&p.staff===false?` <span class="muted" style="font-size:11.5px">· Admins only</span>`:""}</button>`).join("")}`).join("") || `<div class="note" style="padding:10px">No policies match.</div>`}</nav>
   <div>${cur?`<article class="card article"><div class="head"><span class="ref">${esc(cur.code||"")}</span><span style="display:flex;gap:6px">${lockPill(cur)}${status(cur)}</span></div><h2>${esc(cur.title)}</h2>
     <div class="facts"><span>Category: ${esc(cur.category||"General")}</span>${cur.effective?`<span>Effective ${esc(cur.effective)}</span>`:""}<span>Last updated ${fmtShort(cur.updatedAt)}</span>${cur.source?`<span>Source: ${esc(cur.source)}</span>`:""}</div>
     ${/leave/i.test(cur.category||"")?`<div class="banner">${ic("cal")}<div class="grow">Leave requests and approvals run in Hadir.ai. This policy is here for reference.</div><a class="btn sm" href="${esc(HADIR_URL)}" target="_blank" rel="noopener">Open Hadir.ai</a></div>`:""}
-    ${cur.note?`<div class="banner">${ic("book")}<div class="grow">${esc(cur.note)}</div></div>`:""}<div class="body">${esc(cur.body)}</div>${isAdmin()?`<div style="margin-top:22px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-edit="policy:${cur.id}">${ic("edit")}Edit policy</button><button class="btn ghost sm" data-vis="policies:${cur.id}">${ic("eye")}${cur.staff===false?"Show to staff":"Hide from staff"}</button><button class="btn ghost sm danger" data-del="policies:${cur.id}" title="Delete policy">${ic("trash")}Delete</button></div>`:""}</article>`:`<div class="card">${emptyState("book","No policy selected","Add a policy or change the search.")}</div>`}</div></div>`;
+    ${cur.note?`<div class="banner">${ic("book")}<div class="grow">${esc(cur.note)}</div></div>`:""}<div class="body">${esc(cur.body)}</div>${isAdmin()?`<div style="margin-top:22px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-edit="policy:${esc(cur.id)}">${ic("edit")}Edit policy</button><button class="btn ghost sm" data-vis="policies:${esc(cur.id)}">${ic("eye")}${cur.staff===false?"Show to staff":"Hide from staff"}</button><button class="btn ghost sm danger" data-del="policies:${esc(cur.id)}" title="Delete policy">${ic("trash")}Delete</button></div>`:""}</article>`:`<div class="card">${emptyState("book","No policy selected","Add a policy or change the search.")}</div>`}</div></div>`;
 },
 };
 
 function annCard(a, full=false){
-  return `<article class="card ann ${a.pinned?"pinned":""}" ${full?"":`data-ann="${a.id}" tabindex="0"`}>
+  return `<article class="card ann ${a.pinned?"pinned":""}" ${full?"":`data-ann="${esc(a.id)}" tabindex="0"`}>
     <div class="ann-top">${lockPill(a)}${a.pinned?`<span class="pill gold plain">${ic("pin2").replace('class="i"','class="i" style="width:12px;height:12px"')}Pinned</span>`:""}${catPill(a.category)}<span class="ann-meta">${esc(a.audience||"All staff")} · ${fmtShort(a.date)}${annExpired(a)?" · Past":a.expires?" · Until "+fmtShort(a.expires):""}</span></div>
     <h3>${esc(a.title)}</h3>
     <div class="ann-body ${full?"":"clamp"}">${esc(a.body)}</div>
     <div class="ann-actions">
       <a class="btn sm" href="https://wa.me/?text=${encodeURIComponent(waText(a))}" target="_blank" rel="noopener" data-stop>${ic("send")}Share to WhatsApp</a>
-      <button class="btn ghost sm" type="button" data-copyann="${a.id}">${ic("copy")}Copy</button>
-      ${isAdmin()?`<button class="btn ghost sm" type="button" data-pin="${a.id}">${ic("pin2")}${a.pinned?"Unpin":"Pin"}</button>
-      <button class="btn ghost sm" type="button" data-edit="announcement:${a.id}">${ic("edit")}Edit</button>
-      <button class="btn ghost sm" type="button" data-vis="announcements:${a.id}">${ic("eye")}${a.staff===false?"Show to staff":"Hide from staff"}</button>
-      <button class="btn ghost sm danger" type="button" data-del="announcements:${a.id}" title="Delete">${ic("trash")}</button>`:""}
+      <button class="btn ghost sm" type="button" data-copyann="${esc(a.id)}">${ic("copy")}Copy</button>
+      ${isAdmin()?`<button class="btn ghost sm" type="button" data-pin="${esc(a.id)}">${ic("pin2")}${a.pinned?"Unpin":"Pin"}</button>
+      <button class="btn ghost sm" type="button" data-edit="announcement:${esc(a.id)}">${ic("edit")}Edit</button>
+      <button class="btn ghost sm" type="button" data-vis="announcements:${esc(a.id)}">${ic("eye")}${a.staff===false?"Show to staff":"Hide from staff"}</button>
+      <button class="btn ghost sm danger" type="button" data-del="announcements:${esc(a.id)}" title="Delete">${ic("trash")}</button>`:""}
     </div></article>`;
 }
 function bindVis(root){ root.querySelectorAll("[data-vis]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); if(!isAdmin()) return; const [c,id]=b.dataset.vis.split(":"); const x=S[c].find(y=>y.id===id); if(!x) return; x.staff=!staffCan(c,x); x.updatedAt=new Date().toISOString(); persist(); const d=$("#dlg"); if(d.open&&c==="announcements") openAnnouncement(id); if(d.open&&c==="documents") openDoc(id); render(); toast(x.staff?"Visible to staff":"Hidden from staff"); }); }
@@ -1198,7 +1211,8 @@ const mhead=(t,sub="")=>`<div class="mhead"><div><h2>${t}</h2>${sub?`<p>${sub}</
 
 /* ---------- files ---------- */
 $("#filePick").onchange=e=>{ const fs=[...e.target.files]; e.target.value=""; if(fs.length) askFileDetails(fs, $("#filePick").dataset.emp||""); delete $("#filePick").dataset.emp; };
-function empOptions(sel,blank){ return (blank?`<option value="">Not linked to a person</option>`:"")+[...S.employees].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}" ${e.id===sel?"selected":""}>${esc(e.name)}${e.status==="Former"?" (former)":""}</option>`).join(""); }
+function empOptions(sel,blank){ return (blank?`<option value="">Not linked to a person</option>`:"")+[...S.employees].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${esc(e.id)}" ${e.id===sel?"selected":""}>${esc(e.name)}${e.status==="Former"?" (former)":""}</option>`).join(""); }
+const UPLOAD_OK=/\.(pdf|docx?|xlsx?|csv|txt|rtf|jpe?g|png|heic|webp)$/i;
 function askFileDetails(files, preEmp){
   if(!isAdmin()) return;
   const f=openDialog(`${mhead(files.length===1?"Upload a file":"Upload "+files.length+" files","Link it to a person and a category so it is easy to find later.")}
@@ -1217,11 +1231,12 @@ function askFileDetails(files, preEmp){
       i++; if(ub) ub.textContent=files.length>1?`Uploading ${i} of ${files.length}…`:"Uploading…";
       if(!file.size){ toast(file.name+" is empty and was not uploaded."); continue; }
       if(file.size>25*1024*1024){ toast(file.name+" is over 25 MB and was not uploaded."); continue; }
+      if(!UPLOAD_OK.test(file.name)){ toast(file.name+" was not uploaded. Use PDF, Word, Excel, CSV, text, JPG or PNG."); continue; }
       let id=null;
       try{
         const r=await api("file_upload",{name:file.name,type:file.type||"application/octet-stream",size:file.size,category:$("#ff-cat").value,note:$("#ff-note").value.trim(),staff:$("#ff-staff").checked,employeeId:e?.id||"",employeeName:e?.name||""});
         id=r.id;
-        const put=await fetch(r.uploadUrl,{method:"PUT",headers:{"Content-Type":file.type||"application/octet-stream","x-upsert":"false"},body:file});
+        const put=await fetch(r.uploadUrl,{method:"PUT",headers:{"Content-Type":r.contentType||file.type||"application/octet-stream","x-upsert":"false"},body:file});
         if(!put.ok) throw new Error("The upload of "+file.name+" did not finish.");
         const c=await api("file_confirm",{id});
         S.files.push(c.file); SNAP.files.set(c.file.id,JSON.stringify(c.file)); added++;
@@ -1245,7 +1260,7 @@ function openDoc(id){
   const d=S.documents.find(x=>x.id===id); if(!d) return;
   const f=openDialog(`${mhead(esc(d.title), esc((d.kind||"Draft")+(d.employeeName&&isAdmin()?" · "+d.employeeName:"")+(isAdmin()?(d.staff===true?" · Shared with staff":" · Admins only"):"")+" · Saved "+fmtShort(d.createdAt)))}
   <div class="mbody"><div class="reader" id="docText">${esc(d.body)}</div></div>
-  <div class="mfoot"><div class="left">${isAdmin()?`<button class="btn danger" type="button" id="docDel">${ic("trash")}Delete</button><button class="btn ghost" type="button" data-vis="documents:${d.id}">${ic("eye")}${d.staff===true?"Hide from staff":"Show to staff"}</button>`:""}</div><button class="btn" type="button" id="docCopy">${ic("copy")}Copy text</button><button class="btn primary" value="close">Done</button></div>`,"wide");
+  <div class="mfoot"><div class="left">${isAdmin()?`<button class="btn danger" type="button" id="docDel">${ic("trash")}Delete</button><button class="btn ghost" type="button" data-vis="documents:${esc(d.id)}">${ic("eye")}${d.staff===true?"Hide from staff":"Show to staff"}</button>`:""}</div><button class="btn" type="button" id="docCopy">${ic("copy")}Copy text</button><button class="btn primary" value="close">Done</button></div>`,"wide");
   $("#docCopy").onclick=()=>copyText(d.body,$("#docText"));
   bindVis(f);
   if($("#docDel")) $("#docDel").onclick=e=>{ const b=e.currentTarget; if(b.dataset.armed){ if(armedOk(b)) removeItem("documents",id); return; } arm(b); b.textContent="Click again to delete"; };
@@ -1266,7 +1281,7 @@ function openProfile(id, tabSel="overview"){
       <div class="infocard"><h3>On file</h3>${dl([["Files",String(fl.length)],["Documents",String(docs.length)]])}</div>
       <div class="infocard"><h3>Leave and attendance</h3><p class="note" style="margin:0 0 10px">Balances and requests are kept in Hadir.ai.</p><a class="btn sm" href="${esc(HADIR_URL)}" target="_blank" rel="noopener">${ic("cal")}Open Hadir.ai</a></div></div>`,
     employment:`<div class="infogrid"><div class="infocard" style="grid-column:1/-1"><h3>Employment information</h3>${dl([["Job title",val(e.role)],["Department",val(e.department)],["Reporting manager",val(e.manager)],["Join date",e.joined?fmtShort(e.joined):val("")],["Employment type",val(e.type)],["Branch",val(e.branch)],["Entity",val(e.entity)],["Status",statusPill(e.status)]])}</div></div>`,
-    documents:`<div class="card" style="box-shadow:none">${fl.length||docs.length?`<div style="padding:4px 16px">${fl.map(x=>`<div class="act" data-pf="${x.id}" tabindex="0"><div class="dot" style="border:0;background:none;padding:0">${ficon(x)}</div><div style="min-width:0"><div class="t">${esc(x.name)}</div><div class="s">${esc(x.category||"Other")} · ${sizeFmt(x.size||0)} · ${fmtShort(x.addedAt)}</div></div></div>`).join("")}${docs.map(x=>`<div class="act" data-pd="${x.id}" tabindex="0"><div class="dot">${ic("doc")}</div><div style="min-width:0"><div class="t">${esc(x.title)}</div><div class="s">${esc(x.kind||"Draft")} · ${fmtShort(x.createdAt)}</div></div></div>`).join("")}</div>`:emptyState("folder","No documents for this person yet","Upload a contract, CNIC copy or signed letter.")}</div><div style="margin-top:12px"><button class="btn sm" type="button" id="pFile">${ic("upload")}Upload file</button></div>`,
+    documents:`<div class="card" style="box-shadow:none">${fl.length||docs.length?`<div style="padding:4px 16px">${fl.map(x=>`<div class="act" data-pf="${esc(x.id)}" tabindex="0"><div class="dot" style="border:0;background:none;padding:0">${ficon(x)}</div><div style="min-width:0"><div class="t">${esc(x.name)}</div><div class="s">${esc(x.category||"Other")} · ${sizeFmt(x.size||0)} · ${fmtShort(x.addedAt)}</div></div></div>`).join("")}${docs.map(x=>`<div class="act" data-pd="${esc(x.id)}" tabindex="0"><div class="dot">${ic("doc")}</div><div style="min-width:0"><div class="t">${esc(x.title)}</div><div class="s">${esc(x.kind||"Draft")} · ${fmtShort(x.createdAt)}</div></div></div>`).join("")}</div>`:emptyState("folder","No documents for this person yet","Upload a contract, CNIC copy or signed letter.")}</div><div style="margin-top:12px"><button class="btn sm" type="button" id="pFile">${ic("upload")}Upload file</button></div>`,
 
     notes:`<div class="infocard"><h3>Notes</h3><p style="margin:0;white-space:pre-wrap">${e.notes?esc(e.notes):`<span class="muted">No notes yet. Use Edit to add some.</span>`}</p></div>`,
   };
@@ -1348,9 +1363,9 @@ function openSettings(){
     ${box("ac-dir",a.directory,"Team directory","Names, roles, departments and branches of current staff. Never phone numbers, emails or notes.")}
     ${box("ac-agent",a.agent,"HR Agent","Answers from the policies staff can see. It never sees the staff file.")}
   </div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn ghost sm" type="button" id="ac-preview">${ic("eye")}Preview as staff</button><span class="note" id="ac-msg">Changes save as you tick and apply for staff straight away.</span></div></div>
-  <div class="fsec"><h3>Passwords</h3><p class="note" style="margin:0">Enter the current admin password, then a new password for either role. Leave a box empty to keep that password.</p>
+  <div class="fsec"><h3>Passwords</h3><p class="note" style="margin:0">Enter the current admin password, then a new password for either role. Leave a box empty to keep that password. New passwords need at least 12 characters and are case-sensitive. A phrase of three or four unrelated words is strong and easy to remember.</p>
     <div class="f"><label for="pw-cur">Current admin password</label><input id="pw-cur" type="password" autocomplete="off"></div>
-    <div class="g2"><div class="f"><label for="pw-admin">New admin password</label><input id="pw-admin" type="password" autocomplete="off"></div><div class="f"><label for="pw-staff">New staff password</label><input id="pw-staff" type="password" autocomplete="off"></div></div>
+    <div class="g2"><div class="f"><label for="pw-admin">New admin password</label><input id="pw-admin" type="password" autocomplete="new-password" minlength="12"></div><div class="f"><label for="pw-staff">New staff password</label><input id="pw-staff" type="password" autocomplete="new-password" minlength="12"></div></div>
     <div><button class="btn sm" type="button" id="pw-save">Change passwords</button></div><div class="note" id="pw-msg"></div></div>
   <div class="fsec"><h3>HR Agent</h3>${CL.sample?`<div class="banner" style="margin:0">${ic("spark")}<div class="grow">Opened inside Claude, the agent runs on your Claude plan. No key is needed here.</div></div>`:""}
     <div class="f"><label for="st-key">Anthropic API key on this device</label><input id="st-key" type="password" value="${esc(key)}" placeholder="sk-ant-…"><div class="note">Saved only in this browser, never inside the page file.</div></div>
@@ -1366,10 +1381,10 @@ function openSettings(){
   $("#pw-save").onclick=changePasswords;
 }
 async function changePasswords(){
-  const msg=$("#pw-msg"), btn=$("#pw-save"), cur=$("#pw-cur").value, na=$("#pw-admin").value.trim(), ns=$("#pw-staff").value.trim();
+  const msg=$("#pw-msg"), btn=$("#pw-save"), cur=$("#pw-cur").value, na=$("#pw-admin").value, ns=$("#pw-staff").value;
   if(!cur.trim()){ msg.textContent="Enter the current admin password."; return; }
   if(!na&&!ns){ msg.textContent="Enter a new password for at least one role."; return; }
-  if((na&&na.length<6)||(ns&&ns.length<6)){ msg.textContent="Use at least 6 characters."; return; }
+  for(const p of [na,ns]){ const why=p&&pwProblem(p); if(why){ msg.textContent=why; return; } }
   if(na&&ns&&normPw(na)===normPw(ns)){ msg.textContent="The two passwords must be different."; return; }
   msg.textContent="Saving…"; btn.disabled=true;
   try{
@@ -1506,7 +1521,7 @@ ${depts}
 POLICIES:
 ${pol||"(No policies are shared with staff at the moment.)"}`;
   }
-  const roster=S.employees.map(e=>`${e.id} | ${e.name} | ${e.role||"-"} | ${e.department||"-"} | ${e.branch||"branch not recorded"} | ${e.status}`).join("\n");
+  const roster=S.employees.map(e=>`${esc(e.id)} | ${e.name} | ${e.role||"-"} | ${e.department||"-"} | ${e.branch||"branch not recorded"} | ${e.status}`).join("\n");
   const pol=S.policies.map(p=>`### ${p.title}${p.code?" ("+p.code+")":""}${p.effective?" effective "+p.effective:""}\n${p.body}`).join("\n\n");
   return `You are the HR agent for DSA Group (Dr. Salman Aesthetics, MSK Aesthetics, Cosmetic Expert), aesthetic and hair restoration clinics in Islamabad (Pakland Tower 3, 9th Floor, New Blue Area, G-9) and Peshawar (Spogmay Plaza, University Road). You work for the People & Culture Department. Your users are People & Culture and management. Today is ${today()}.
 

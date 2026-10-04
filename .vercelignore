@@ -1,0 +1,6 @@
+# Not part of the website: keep test code, server source and notes off the live site.
+qa
+qa_suite.py
+server
+README.md
+.gitignore
