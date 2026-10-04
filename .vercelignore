@@ -4,3 +4,5 @@ qa_suite.py
 server
 README.md
 .gitignore
+.flow
+CLAUDE.md
